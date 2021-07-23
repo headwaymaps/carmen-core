@@ -7,8 +7,10 @@ pub fn benchmark(c: &mut Criterion) {
     let to_bench = vec![
         ("coalesce_global", "gb_address_pm_global.ljson.lz4"),
         ("coalesce_prox", "gb_address_pm_with_proximity.ljson.lz4"),
+        ("coalesce_bounds", "gb_address_pm_with_bounds.ljson.lz4"),
         ("coalesce_ac_global", "gb_address_pm_ac_global.ljson.lz4"),
         ("coalesce_ac_prox", "gb_address_pm_ac_with_proximity.ljson.lz4"),
+        ("coalesce_ac_bounds", "gb_address_pm_ac_with_bounds.ljson.lz4"),
     ];
 
     for (label, file) in to_bench {
