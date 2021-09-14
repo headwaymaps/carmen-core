@@ -13,6 +13,11 @@ matrix:
       before_cache:
       - cargo install cargo-tarpaulin
 
+      before_run:
+      - if ! [ -x "$(command -v aws)" ]; then curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" ; unzip awscliv2.zip ; sudo ./aws/install ; fi
+      - aws sts get-caller-identity
+
+
       script:
       - cargo clean
       - cargo fmt --all -- --check
