@@ -76,3 +76,4 @@ cargo bench
 Html reports will be generated in `target/criterion/report/index.html`
 
 Criterion will measure the statistical significance of the difference between two different bench runs, so to measure the impact of a change, you can checkout master, run a bench, and then check out a feature branch and run a bench. Note: the results are sensitive to other resource usage on your machine. For more accurate results, run in an isolated environment.
+
