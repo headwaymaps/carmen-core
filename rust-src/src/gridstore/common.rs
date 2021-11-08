@@ -423,6 +423,9 @@ pub const MAX_CONTEXTS: usize = 40;
 // shouldn't need as many records. Still, we should limit it somehow.
 pub const MAX_GRIDS_PER_PHRASE: usize = 100_000;
 
+// The maximum number of indexes supported -- currently limited to 8 bits in grid_to_coalesce_entry
+pub const MAX_INDEXES: usize = 256;
+
 #[derive(Serialize, Deserialize, Debug, PartialOrd, PartialEq, Clone)]
 pub struct GridEntry {
     // these will be truncated to 4 bits apiece
@@ -486,6 +489,9 @@ impl PartialOrd for CoalesceContext {
         Some(self.cmp(other))
     }
 }
+
+// Note that this equality function considers only some fields of the context (refer to sort_key())
+// Two contexts may be considered equal even if their entries differ
 impl PartialEq for CoalesceContext {
     fn eq(&self, other: &Self) -> bool {
         self.sort_key() == other.sort_key()

@@ -28,7 +28,7 @@ fn coalesce_single_test_proximity_quadrants() {
     let subquery = PhrasematchSubquery {
         store: &store,
         idx: 1,
-        non_overlapping_indexes: FixedBitSet::with_capacity(128),
+        non_overlapping_indexes: FixedBitSet::with_capacity(MAX_INDEXES),
         weight: 1.,
         match_keys: vec![MatchKeyWithId {
             id: 0,
@@ -131,7 +131,7 @@ fn coalesce_single_test_proximity_basic() {
     let subquery = PhrasematchSubquery {
         store: &store,
         idx: 1,
-        non_overlapping_indexes: FixedBitSet::with_capacity(128),
+        non_overlapping_indexes: FixedBitSet::with_capacity(MAX_INDEXES),
         weight: 1.,
         match_keys: vec![MatchKeyWithId {
             id: 0,
@@ -185,7 +185,7 @@ fn coalesce_single_test_language_penalty() {
     let subquery = PhrasematchSubquery {
         store: &store,
         idx: 1,
-        non_overlapping_indexes: FixedBitSet::with_capacity(128),
+        non_overlapping_indexes: FixedBitSet::with_capacity(MAX_INDEXES),
         weight: 1.,
         match_keys: vec![MatchKeyWithId {
             id: 0,
@@ -237,7 +237,7 @@ fn coalesce_multi_test_language_penalty() {
         1,
         14,
         1,
-        FixedBitSet::with_capacity(128),
+        FixedBitSet::with_capacity(MAX_INDEXES),
         200.,
     );
 
@@ -253,7 +253,7 @@ fn coalesce_multi_test_language_penalty() {
         2,
         6,
         0,
-        FixedBitSet::with_capacity(128),
+        FixedBitSet::with_capacity(MAX_INDEXES),
         200.,
     );
 
@@ -336,7 +336,7 @@ fn coalesce_single_test() {
         1,
         6,
         0,
-        FixedBitSet::with_capacity(128),
+        FixedBitSet::with_capacity(MAX_INDEXES),
         40.,
     );
     let subquery = PhrasematchSubquery {
@@ -422,81 +422,64 @@ fn coalesce_single_test() {
         assert_eq!(result[1].entries[0].grid_entry.id, 1, "2nd result is farther away than 3rd but has a higher relevance");
         assert_eq!(result[2].entries[0].grid_entry.id, 2, "3rd is closer but has a lower relevance");
     }
+    assert_eq!(result[0].relev, 1., "1st result has relevance 1");
+    assert_eq!(result[0].mask, 1, "1st result context has correct mask");
+    assert_eq!(result[0].entries.len(), 1, "1st result has 1 coalesce entries");
     assert_eq!(
-        result[0],
-        CoalesceContext {
+        result[0].entries[0],
+        CoalesceEntry {
+            phrasematch_id: 0,
+            matches_language: true,
+            idx: 1,
+            tmp_id: 16777219,
             mask: 1 << 0,
-            relev: 1.,
-            entries: vec![CoalesceEntry {
-                phrasematch_id: 0,
-                matches_language: true,
-                idx: 1,
-                tmp_id: 33554435,
-                mask: 1 << 0,
-                distance: 0.,
-                scoredist: 1.5839497841387566,
-                grid_entry: GridEntry {
-                    id: 3,
-                    x: 3,
-                    y: 3,
-                    relev: 1.,
-                    score: 1,
-                    source_phrase_hash: 0,
-                }
-            }],
+            distance: 0.,
+            scoredist: 1.5839497841387566,
+            grid_entry: GridEntry { id: 3, x: 3, y: 3, relev: 1., score: 1, source_phrase_hash: 0 }
         },
-        "1st result has expected properties"
+        "1st result entry has expected properties"
     );
+    assert_eq!(result[1].relev, 1., "2nd result has relevance 1");
+    assert_eq!(result[1].mask, 1, "2nd result context has correct mask");
+    assert_eq!(result[1].entries.len(), 1, "2nd result has 1 coalesce entries");
     assert_eq!(
-        result[1],
-        CoalesceContext {
+        result[1].entries[0],
+        CoalesceEntry {
+            phrasematch_id: 0,
+            matches_language: true,
+            idx: 1,
+            tmp_id: 16777217,
             mask: 1 << 0,
-            relev: 1.,
-            entries: vec![CoalesceEntry {
-                phrasematch_id: 0,
-                matches_language: true,
-                idx: 1,
-                tmp_id: 33554433,
-                mask: 1 << 0,
-                distance: 2.8284271247461903,
-                scoredist: 1.109893833332405,
-                grid_entry: GridEntry {
-                    id: 1,
-                    x: 1,
-                    y: 1,
-                    relev: 1.,
-                    score: 3,
-                    source_phrase_hash: 0,
-                }
-            }],
+            distance: 2.8284271247461903,
+            scoredist: 1.109893833332405,
+            grid_entry: GridEntry { id: 1, x: 1, y: 1, relev: 1., score: 3, source_phrase_hash: 0 }
         },
-        "2nd result has expected properties"
+        "2nd result entry has expected properties"
     );
+    assert_eq!(result[2].relev, 0.8, "3rd result has relevance 0.8");
+    assert_eq!(result[2].mask, 1, "2nd result context has correct mask");
+    assert_eq!(result[2].entries.len(), 1, "3rd result has 1 coalesce entries");
     assert_eq!(
-        result[2],
-        CoalesceContext {
+        result[2].entries[0],
+        CoalesceEntry {
+            phrasematch_id: 0,
+            matches_language: true,
+            idx: 1,
+            tmp_id: 16777218,
             mask: 1 << 0,
-            relev: 0.8,
-            entries: vec![CoalesceEntry {
-                phrasematch_id: 0,
-                matches_language: true,
-                idx: 1,
-                tmp_id: 33554434,
-                mask: 1 << 0,
-                distance: 1.4142135623730951,
-                // Has the same scoredist as 2nd result because they're both beyond proximity radius
-                scoredist: 1.109893833332405,
-                grid_entry: GridEntry {
-                    id: 2,
-                    x: 2,
-                    y: 2,
-                    relev: 0.8,
-                    score: 3,
-                    source_phrase_hash: 0,
-                }
-            }],
+            distance: 1.4142135623730951,
+            // Has the same scoredist as 2nd result because they're both beyond proximity radius
+            scoredist: 1.109893833332405,
+            grid_entry: GridEntry {
+                id: 2,
+                x: 2,
+                y: 2,
+                relev: 0.8,
+                score: 3,
+                source_phrase_hash: 0,
+            }
         },
-        "2nd result has expected properties"
+        "3rd result entry has expected properties"
     );
 
     // Test with bbox
@@ -517,7 +500,7 @@ fn coalesce_single_test() {
                 phrasematch_id: 0,
                 matches_language: true,
                 idx: 1,
-                tmp_id: 33554433,
+                tmp_id: 0,
                 mask: 1 << 0,
                 distance: 0.,
                 scoredist: 3.,
@@ -551,7 +534,7 @@ fn coalesce_single_test() {
                 phrasematch_id: 0,
                 matches_language: true,
                 idx: 1,
-                tmp_id: 33554433,
+                tmp_id: 0,
                 mask: 1 << 0,
                 distance: 0.,
                 scoredist: 1.7322531402718835,
@@ -593,7 +576,7 @@ fn coalesce_single_languages_test() {
     let subquery = PhrasematchSubquery {
         store: &store,
         idx: 1,
-        non_overlapping_indexes: FixedBitSet::with_capacity(128),
+        non_overlapping_indexes: FixedBitSet::with_capacity(MAX_INDEXES),
         weight: 1.,
         match_keys: vec![MatchKeyWithId {
             id: 0,
@@ -638,7 +621,7 @@ fn coalesce_single_languages_test() {
     let subquery = PhrasematchSubquery {
         store: &store,
         idx: 1,
-        non_overlapping_indexes: FixedBitSet::with_capacity(128),
+        non_overlapping_indexes: FixedBitSet::with_capacity(MAX_INDEXES),
         weight: 1.,
         match_keys: vec![MatchKeyWithId {
             id: 0,
@@ -683,7 +666,7 @@ fn coalesce_single_languages_test() {
     let subquery = PhrasematchSubquery {
         store: &store,
         idx: 1,
-        non_overlapping_indexes: FixedBitSet::with_capacity(128),
+        non_overlapping_indexes: FixedBitSet::with_capacity(MAX_INDEXES),
         weight: 1.,
         match_keys: vec![MatchKeyWithId {
             id: 0,
@@ -747,7 +730,7 @@ fn coalesce_single_nearby_only() {
     let subquery = PhrasematchSubquery {
         store: &store,
         idx: 1,
-        non_overlapping_indexes: FixedBitSet::with_capacity(128),
+        non_overlapping_indexes: FixedBitSet::with_capacity(MAX_INDEXES),
         weight: 1.,
         match_keys: vec![MatchKeyWithId {
             nearby_only: true,
@@ -796,7 +779,7 @@ fn coalesce_single_test_bounds() {
     let subquery = PhrasematchSubquery {
         store: &store,
         idx: 1,
-        non_overlapping_indexes: FixedBitSet::with_capacity(128),
+        non_overlapping_indexes: FixedBitSet::with_capacity(MAX_INDEXES),
         weight: 1.,
         match_keys: vec![MatchKeyWithId {
             nearby_only: false,
@@ -819,7 +802,7 @@ fn coalesce_single_test_bounds() {
     let subquery = PhrasematchSubquery {
         store: &store,
         idx: 1,
-        non_overlapping_indexes: FixedBitSet::with_capacity(128),
+        non_overlapping_indexes: FixedBitSet::with_capacity(MAX_INDEXES),
         weight: 1.,
         match_keys: vec![MatchKeyWithId {
             nearby_only: true,
@@ -846,7 +829,7 @@ fn coalesce_single_test_bounds() {
     let subquery = PhrasematchSubquery {
         store: &store,
         idx: 1,
-        non_overlapping_indexes: FixedBitSet::with_capacity(128),
+        non_overlapping_indexes: FixedBitSet::with_capacity(MAX_INDEXES),
         weight: 1.,
         match_keys: vec![MatchKeyWithId {
             nearby_only: true,
@@ -890,7 +873,7 @@ fn coalesce_multi_test() {
         0,
         1,
         0,
-        FixedBitSet::with_capacity(128),
+        FixedBitSet::with_capacity(MAX_INDEXES),
         40.,
     );
 
@@ -906,7 +889,7 @@ fn coalesce_multi_test() {
         1,
         2,
         1,
-        FixedBitSet::with_capacity(128),
+        FixedBitSet::with_capacity(MAX_INDEXES),
         40.,
     );
 
@@ -959,7 +942,7 @@ fn coalesce_multi_test() {
             phrasematch_id: 0,
             matches_language: true,
             idx: 1,
-            tmp_id: 33554434,
+            tmp_id: 16777218,
             mask: 1 << 0,
             distance: 0.,
             scoredist: 3.,
@@ -1004,7 +987,7 @@ fn coalesce_multi_test() {
             phrasematch_id: 0,
             matches_language: true,
             idx: 1,
-            tmp_id: 33554435,
+            tmp_id: 16777219,
             mask: 1 << 0,
             distance: 0.,
             scoredist: 1.,
@@ -1057,7 +1040,7 @@ fn coalesce_multi_test() {
             phrasematch_id: 0,
             matches_language: true,
             idx: 1,
-            tmp_id: 33554435,
+            tmp_id: 16777219,
             mask: 1 << 0,
             distance: 0.,
             scoredist: 1.5839497841387566,
@@ -1100,7 +1083,7 @@ fn coalesce_multi_test() {
             phrasematch_id: 0,
             matches_language: true,
             idx: 1,
-            tmp_id: 33554434,
+            tmp_id: 16777218,
             mask: 1 << 0,
             distance: 1.4142135623730951,
             scoredist: 1.109893833332405,
@@ -1156,7 +1139,7 @@ fn coalesce_multi_languages_test() {
         0,
         1,
         0,
-        FixedBitSet::with_capacity(128),
+        FixedBitSet::with_capacity(MAX_INDEXES),
         200.,
     );
 
@@ -1191,7 +1174,7 @@ fn coalesce_multi_languages_test() {
         1,
         1,
         1,
-        FixedBitSet::with_capacity(128),
+        FixedBitSet::with_capacity(MAX_INDEXES),
         200.,
     );
 
@@ -1394,7 +1377,7 @@ fn coalesce_multi_scoredist() {
         0,
         0,
         0,
-        FixedBitSet::with_capacity(128),
+        FixedBitSet::with_capacity(MAX_INDEXES),
         200.,
     );
 
@@ -1410,7 +1393,7 @@ fn coalesce_multi_scoredist() {
         1,
         14,
         1,
-        FixedBitSet::with_capacity(128),
+        FixedBitSet::with_capacity(MAX_INDEXES),
         200.,
     );
 
@@ -1491,7 +1474,7 @@ fn coalesce_multi_test_bbox() {
         0,
         1,
         0,
-        FixedBitSet::with_capacity(128),
+        FixedBitSet::with_capacity(MAX_INDEXES),
         200.,
     );
     let store2 = create_store(
@@ -1505,7 +1488,7 @@ fn coalesce_multi_test_bbox() {
         1,
         2,
         1,
-        FixedBitSet::with_capacity(128),
+        FixedBitSet::with_capacity(MAX_INDEXES),
         200.,
     );
 
@@ -1520,7 +1503,7 @@ fn coalesce_multi_test_bbox() {
         2,
         5,
         2,
-        FixedBitSet::with_capacity(128),
+        FixedBitSet::with_capacity(MAX_INDEXES),
         200.,
     );
 

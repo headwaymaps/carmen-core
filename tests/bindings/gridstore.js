@@ -257,7 +257,7 @@ tape('Coalesce single valid stack - Valid inputs', (t) => {
                     { relev: 1, score: 1, x: 2, y: 2, id: 1, source_phrase_hash: 0 },
                     matches_language: true,
                     idx: 1,
-                    tmp_id: 33554433,
+                    tmp_id: 16777217,
                     mask: 1,
                     distance: 0,
                     scoredist: 1,

@@ -668,7 +668,7 @@ mod tests {
             let subquery = PhrasematchSubquery {
                 store: reader,
                 idx: 1,
-                non_overlapping_indexes: FixedBitSet::with_capacity(128),
+                non_overlapping_indexes: FixedBitSet::with_capacity(MAX_INDEXES),
                 weight: 1.,
                 match_keys: vec![MatchKeyWithId {
                     id: 0,

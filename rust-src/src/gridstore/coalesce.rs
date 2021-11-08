@@ -66,7 +66,7 @@ fn grid_to_coalesce_entry<T: Borrow<GridStore> + Clone>(
         grid_entry: GridEntry { relev: relevance, ..grid.grid_entry },
         matches_language: grid.matches_language,
         idx: subquery.idx,
-        tmp_id: ((subquery.idx as u32) << 25) + grid.grid_entry.id,
+        tmp_id: ((subquery.idx as u32) << 24) + grid.grid_entry.id,
         mask: subquery.mask,
         distance: grid.distance,
         scoredist: grid.scoredist,
@@ -1020,7 +1020,7 @@ mod test {
         let a1 = PhrasematchSubquery {
             store: &store1,
             idx: 2,
-            non_overlapping_indexes: FixedBitSet::with_capacity(128),
+            non_overlapping_indexes: FixedBitSet::with_capacity(MAX_INDEXES),
             weight: 0.5,
             mask: 1,
             match_keys: vec![MatchKeyWithId {
@@ -1033,7 +1033,7 @@ mod test {
         let a2 = PhrasematchSubquery {
             store: &store1,
             idx: 2,
-            non_overlapping_indexes: FixedBitSet::with_capacity(128),
+            non_overlapping_indexes: FixedBitSet::with_capacity(MAX_INDEXES),
             weight: 0.5,
             mask: 1,
             match_keys: vec![MatchKeyWithId {
