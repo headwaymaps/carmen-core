@@ -6,6 +6,7 @@ edition = "2018"
 
 [lib]
 path = "rust-src/src/lib.rs"
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 serde = { version = "1.0", features = ["derive", "rc"] }
